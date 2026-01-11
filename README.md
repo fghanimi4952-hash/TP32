@@ -2,17 +2,9 @@
 
 Ce projet présente la mise en place complète d'un pipeline CI/CD pour une architecture de microservices utilisant Jenkins, GitHub, SonarQube, Docker Compose et Ngrok.
 
-## 📋 Table des matières
 
-- [Objectifs pédagogiques](#objectifs-pédagogiques)
-- [Prérequis](#prérequis)
-- [Architecture](#architecture)
-- [Installation et configuration](#installation-et-configuration)
-- [Fichiers du projet](#fichiers-du-projet)
-- [Guide pas à pas](#guide-pas-à-pas)
-- [Dépannage](#dépannage)
 
-## 🎯 Objectifs pédagogiques
+##  Objectifs pédagogiques
 
 - Mettre en place Jenkins et configurer les outils (JDK, Maven, SonarScanner)
 - Déployer SonarQube via Docker Compose et créer des projets + tokens par microservice
@@ -20,7 +12,7 @@ Ce projet présente la mise en place complète d'un pipeline CI/CD pour une arch
 - Créer un job Pipeline Jenkins et écrire un script de pipeline multi-stages
 - Lancer/valider l'exécution (Jenkins, SonarQube, Docker) et vérifier le déclenchement par push
 
-## 📦 Prérequis
+##  Prérequis
 
 ### Prérequis techniques (outils)
 
@@ -39,7 +31,7 @@ Ce projet présente la mise en place complète d'un pipeline CI/CD pour une arch
 - **Java/Spring Boot** : structure d'un projet, build Maven
 - **Notions CI/CD** : stages (build, analyse, déploiement), exécution automatique
 
-## 🏗️ Architecture
+##  Architecture
 
 L'application est composée de 4 microservices :
 - **car** : Microservice de gestion des voitures
@@ -52,7 +44,7 @@ Le pipeline CI/CD assure :
 - **CD** : Déploiement des services dans des conteneurs via Docker Compose
 - **Automatisation** : Jenkins exécute le pipeline à chaque push/pull request via webhook GitHub exposé par Ngrok
 
-## 📁 Fichiers du projet
+##  Fichiers du projet
 
 ```
 TP 32/
@@ -63,7 +55,7 @@ TP 32/
 └── README.md                      # Ce fichier
 ```
 
-## 🚀 Installation et configuration
+##  Installation et configuration
 
 ### Étape 1 : Récupération du projet GitHub
 
@@ -166,60 +158,3 @@ ngrok http http://localhost:8080
    ```
    Jenkins doit démarrer automatiquement une nouvelle exécution.
 
-## 🔧 Dépannage
-
-### Jenkins ne se lance pas
-- **Problème** : Port occupé
-- **Solution** : Changer le port Jenkins lors de l'installation (ex: 8081)
-
-### SonarQube inaccessible
-- **Problème** : Conteneurs non démarrés
-- **Solution** : Vérifier avec `docker ps` et redémarrer avec `docker compose -f sonarqube-compose.yml up -d`
-
-### Analyse SonarQube échoue
-- **Problème** : Nom du serveur SonarQube incorrect
-- **Solution** : Vérifier que les noms dans Jenkins (`SonarQube-Car`, `SonarQube-Client`) correspondent exactement à ceux dans le Jenkinsfile
-
-### Webhook GitHub "failed"
-- **Problème** : URL Ngrok changée (plan gratuit)
-- **Solution** : Mettre à jour le **Payload URL** dans GitHub Webhooks avec la nouvelle URL Ngrok
-
-### Docker Compose échoue dans Jenkins
-- **Problème** : Jenkins n'a pas accès au daemon Docker
-- **Solution** : Exécuter Jenkins avec un utilisateur ayant accès à Docker, ou ajouter l'utilisateur Jenkins au groupe docker
-
-### Build Maven échoue
-- **Problème** : Maven non trouvé ou JDK non configuré
-- **Solution** : Vérifier que Maven est configuré avec le nom exact `maven` dans Jenkins Tools, et que JAVA_HOME est défini
-
-## 📝 Notes importantes
-
-- Ce pipeline est adapté pour **Linux/Mac** (utilise `sh`). Pour **Windows**, remplacer `sh` par `bat` dans le Jenkinsfile
-- Le pipeline analyse actuellement **car** et **client** avec SonarQube. Pour ajouter **gateway** et **eureka**, dupliquer le modèle car/client dans le Jenkinsfile
-- L'URL Ngrok change à chaque redémarrage (plan gratuit). Penser à mettre à jour le webhook GitHub
-
-## 📚 Ressources
-
-- [Documentation Jenkins](https://www.jenkins.io/doc/)
-- [Documentation SonarQube](https://docs.sonarqube.org/)
-- [Documentation Docker Compose](https://docs.docker.com/compose/)
-- [Documentation Ngrok](https://ngrok.com/docs)
-
-## ✅ Checklist de vérification
-
-- [ ] Jenkins installé et configuré (JDK, Maven)
-- [ ] SonarQube déployé et accessible (http://localhost:9999)
-- [ ] Projets créés dans SonarQube (car, client) avec tokens
-- [ ] Serveurs SonarQube configurés dans Jenkins
-- [ ] Ngrok configuré avec authtoken
-- [ ] Tunnel Ngrok actif vers Jenkins
-- [ ] Webhook GitHub configuré avec URL Ngrok
-- [ ] Job Pipeline Jenkins créé et configuré
-- [ ] Jenkinsfile copié dans le job
-- [ ] Build manuel réussi
-- [ ] Déclenchement automatique fonctionnel (push GitHub)
-
----
-
-**Auteur** : TP 32 - Architecture Microservices  
-**Date** : 2024
