@@ -1,0 +1,62 @@
+# Exemple de Dockerfile pour les microservices Spring Boot
+# 
+# Ce fichier est un exemple générique de Dockerfile pour un microservice Spring Boot
+# À copier et adapter dans chaque répertoire de microservice (car/, client/, gateway/, server_eureka/)
+#
+# Utilisation:
+#   1. Copier ce fichier dans le répertoire du microservice: cp Dockerfile.example car/Dockerfile
+#   2. Adapter les variables selon le microservice (JAR_NAME, PORT, etc.)
+#   3. Build l'image: docker build -t microservice-name:latest .
+
+# Étape 1: Build de l'application avec Maven
+FROM maven:3.9-eclipse-temurin-17 AS build
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers de configuration Maven (pom.xml)
+COPY pom.xml .
+
+# Télécharger les dépendances (mise en cache des layers)
+RUN mvn dependency:go-offline -B
+
+# Copier le code source
+COPY src ./src
+
+# Build l'application et créer le JAR
+RUN mvn clean package -DskipTests
+
+# Étape 2: Runtime avec OpenJDK
+FROM eclipse-temurin:17-jre-alpine
+
+# Créer un utilisateur non-root pour la sécurité
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier le JAR depuis l'étape de build
+# ADAPTER LE NOM DU JAR selon le microservice
+# Exemples:
+# - car: car-0.0.1-SNAPSHOT.jar
+# - client: client-0.0.1-SNAPSHOT.jar
+# - gateway: gateway-0.0.1-SNAPSHOT.jar
+# - server_eureka: server_eureka-0.0.1-SNAPSHOT.jar
+COPY --from=build /app/target/*.jar app.jar
+
+# Exposer le port de l'application
+# ADAPTER LE PORT selon le microservice
+# Exemples:
+# - car: 8081
+# - client: 8082
+# - gateway: 8080
+# - server_eureka: 8761
+EXPOSE 8080
+
+# Variables d'environnement
+ENV JAVA_OPTS=""
+
+# Commande de démarrage
+# Utiliser exec java pour permettre à Docker de gérer correctement les signaux
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

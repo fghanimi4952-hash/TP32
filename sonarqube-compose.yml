@@ -1,0 +1,64 @@
+# Docker Compose pour SonarQube avec PostgreSQL
+# Ce fichier déploie SonarQube et sa base de données PostgreSQL
+#
+# Utilisation:
+#   docker compose -f sonarqube-compose.yml up -d
+#   docker compose -f sonarqube-compose.yml down
+
+version: '3.9'
+
+services:
+  # Service SonarQube - Plateforme d'analyse de code qualité
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    ports:
+      # Exposition du port 9000 de SonarQube sur le port 9999 de l'hôte
+      # Accès via: http://localhost:9999
+      - "9999:9000"
+    environment:
+      # URL de connexion à la base de données PostgreSQL
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://sonarqube-db:5432/sonarqube
+      # Identifiants de connexion à la base de données
+      - SONARQUBE_JDBC_USERNAME=sonar
+      - SONARQUBE_JDBC_PASSWORD=sonar_pass
+    volumes:
+      # Persistance des données SonarQube
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    depends_on:
+      - sonarqube-db
+    networks:
+      - sonarqube-network
+
+  # Service PostgreSQL - Base de données pour SonarQube
+  sonarqube-db:
+    image: postgres:latest
+    container_name: sonarqube-db
+    environment:
+      # Configuration de la base de données
+      - POSTGRES_DB=sonarqube
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar_pass
+    volumes:
+      # Persistance des données PostgreSQL
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sonarqube-network
+
+# Volumes pour la persistance des données
+volumes:
+  sonarqube_data:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  sonarqube_logs:
+    driver: local
+  postgres_data:
+    driver: local
+
+# Réseau Docker pour la communication entre les services
+networks:
+  sonarqube-network:
+    driver: bridge

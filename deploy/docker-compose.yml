@@ -1,0 +1,125 @@
+# Docker Compose pour le déploiement des microservices
+# Ce fichier déploie tous les microservices de l'application
+#
+# Structure:
+# - Eureka Server (service discovery)
+# - Gateway (API Gateway)
+# - Car Service (microservice Car)
+# - Client Service (microservice Client)
+#
+# Utilisation:
+#   docker-compose up -d --build    # Démarrer tous les services
+#   docker-compose down             # Arrêter tous les services
+#   docker-compose ps               # Voir l'état des services
+#   docker-compose logs -f <service> # Voir les logs d'un service
+
+version: '3.9'
+
+services:
+  # Service Discovery - Eureka Server
+  # Eureka permet aux microservices de s'enregistrer et de découvrir les autres services
+  eureka-server:
+    build:
+      context: ../server_eureka
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      # Port d'accès à l'interface Eureka
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # API Gateway - Point d'entrée unique pour tous les microservices
+  # Le Gateway route les requêtes vers les microservices appropriés
+  gateway:
+    build:
+      context: ../gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      # Port d'accès au Gateway (point d'entrée de l'application)
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      # URL d'Eureka pour la découverte de services
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Microservice Car - Gestion des voitures
+  car-service:
+    build:
+      context: ../car
+      dockerfile: Dockerfile
+    container_name: car-service
+    ports:
+      # Port d'accès direct au service Car (optionnel, généralement via Gateway)
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      # URL d'Eureka pour s'enregistrer comme service
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      # Nom du service pour la découverte
+      - SPRING_APPLICATION_NAME=car-service
+    depends_on:
+      - eureka-server
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Microservice Client - Gestion des clients
+  client-service:
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+    container_name: client-service
+    ports:
+      # Port d'accès direct au service Client (optionnel, généralement via Gateway)
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      # URL d'Eureka pour s'enregistrer comme service
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      # Nom du service pour la découverte
+      - SPRING_APPLICATION_NAME=client-service
+    depends_on:
+      - eureka-server
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+# Réseau Docker pour la communication entre les microservices
+networks:
+  microservices-network:
+    driver: bridge
+
+# Volumes optionnels pour la persistance de données (si nécessaire)
+# volumes:
+#   postgres_data:
+#     driver: local
